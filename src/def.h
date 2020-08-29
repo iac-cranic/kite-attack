@@ -57,24 +57,21 @@
 #ifdef TRIVIUM_CIPHER
     #define IV_ELEM 3
     #define KEY_ELEM 3
-    #define CIPHER TRIVIUM_CIPHER
     #define TRIVIUM_KEY_SIZE 80
     #define TRIVIUM_IV_SIZE 80
     #define KEYS_COEFFICIENT 81
-    #define RESIDUAL_KEYS 17 // Number of keys in the last block of 32 (80keys + 0..0key = 2 * 32 + 17)
+    #define RESIDUAL_KEYS 17 // Number of keys in the last block of 32 (80keys + 0..0key = 2 * 32 + 17) (KEYS_COEFFICIENT % U32SIZE)
     #define TOTAL_KEYS 96
     #define CIPHER_NAME "TRIVIUM"
-    #define IV_MAX_SIZE 80
     #define KEY_SIZE TRIVIUM_KEY_SIZE
     #define IV_SIZE TRIVIUM_IV_SIZE
 #elif defined GRAIN128_CIPHER
     #define IV_ELEM 3
     #define KEY_ELEM 4
-    #define CIPHER GRAIN128_CIPHER
     #define GRAIN128_KEY_SIZE 128
     #define GRAIN128_IV_SIZE 96
     #define KEYS_COEFFICIENT 129 
-    #define RESIDUAL_KEYS 1 // Number of keys in the last block of 32 (128 keys + 0..0key = 4 * 32 + 1)
+    #define RESIDUAL_KEYS 1 // Number of keys in the last block of 32 (128 keys + 0..0key = 4 * 32 + 1) (KEYS_COEFFICIENT % U32SIZE)
     #define TOTAL_KEYS 160
     #define CIPHER_NAME "GRAIN128"
     #define KEY_SIZE GRAIN128_KEY_SIZE
