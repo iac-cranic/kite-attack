@@ -75,8 +75,8 @@ url="https://doi.org/10.1007/s13389-019-00217-3"
 This software is released under the GPLv3 license.
 Refer to [docs/LICENSE](docs/LICENSE) for more information.
 This project has been developed in collaboration with National Research Council of Italy (CNR) and Roma Tre University.
-Copyright(C) 2015-2020 Marco Cianfriglia (marco \<DOT\> cianfriglia <AT> gmail <DOT> com), Massimo Bernaschi (massimo <DOT> bernaschi <AT> gmail <DOT> com),
-Stefano Guarino (stefano <DOT> guarino <AT> gmail <DOT> com), Flavio Lombardi (flavio <DOT> lombardi <AT> gmail <DOT> com), and Marco Pedicini (marco <DOT> pedicini <AT> gmail <DOT> com).
+Copyright(C) 2015-2020 Marco Cianfriglia (marco\<DOT\>cianfriglia\<AT\>gmail\<DOT\>com), Massimo Bernaschi (massimo\<DOT\>bernaschi\<AT\>gmail\<DOT\>com),
+Stefano Guarino (stefano\<DOT\>guarino\<AT\>gmail\<DOT\>com), Flavio Lombardi (flavio\<DOT\>lombardi\<AT\>gmail\<DOT\>com), and Marco Pedicini (marco\<DOT\>pedicini\<AT\>gmail\<DOT\>com).
 The file ```src/twiddle.c``` has been downloaded from [http://www.netlib.no/netlib/toms/382](http://www.netlib.no/netlib/toms/382). You will 
 find the copyright inside it.
 ## Contact
