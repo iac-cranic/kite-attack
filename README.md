@@ -35,7 +35,7 @@ The executables are stored in ```bin``` directory.
 ## Examples
 The following command shows how to run a simple attack against Trivium cipher using the test configuration file stored in ```config``` directory.
 
-```bin/cuda_test_trivium 0 test_trivium.log config/testTrivium_0.conf output_directory_trivium0 ```
+```bin/kite_attack_trivium 0 test_trivium.log config/testTrivium_0.conf output_directory_trivium0 ```
 
 It will run the attack on the device 0 on your machine (run ```nvidia-smi``` to see the devices installed on your machine. You may also use ```CUDA_VISIBLE_DEVICES``` if you are running on a multi-user machine.) 
 
