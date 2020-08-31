@@ -434,10 +434,8 @@ u32* genRandKeys(int num_keys, int seed){
     }
 
 #ifdef TRIVIUM_CIPHER 
-    if ( CIPHER == TRIVIUM_CIPHER ){
-        for(i = 1; i <= num_keys; i++){
-            randkeys[(i*KEY_ELEM) - 1] &= 0xFFFF0000; 
-        }
+    for(i = 1; i <= num_keys; i++){
+        randkeys[(i*KEY_ELEM) - 1] &= 0xFFFF0000; 
     }
 #endif
 
