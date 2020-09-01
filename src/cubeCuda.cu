@@ -1,8 +1,8 @@
 /* <This program implements the Kite-Attack Framework, a GPU-tailored implementation of the Cube Attack.>
  * Copyright (C) <2015-2020> <Massimo Bernaschi> <massimo[DOT]bernaschi[AT]gmail[DOT]com>
- * Copyright (C) <2015-2020>  <Marco Cianfriglia> <marco[DOT]cianfriglia[AT]gmail[DOT]com>    
+ * Copyright (C) <2015-2020> <Marco Cianfriglia> <marco[DOT]cianfriglia[AT]gmail[DOT]com>    
  * Copyright (C) <2015-2020> <Stefano Guarino> <ste[DOT]guarino[AT]gmail[DOT]com>
- * Copyright (C) <2015-2020><Flavio Lombardi> <flavio[DOT]lombardi[AT]cnr[DOT]it>
+ * Copyright (C) <2015-2020> <Flavio Lombardi> <flavio[DOT]lombardi[AT]cnr[DOT]it>
  * Copyright (C) <2015-2020> <Marco Pedicini> <m[DOT]pedicini[AT]gmail[DOT]com>
  *
  * This file is part of Kite-Attack Framework.
@@ -94,7 +94,15 @@ __global__ void kernel1(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * cdbms, u32
     u32 iv_base0 = icdb[0];
     u32 iv_base1 = icdb[1];
     u32 iv_base2 = icdb[2];
-
+#if IV_ELEM ==  4
+    u32 iv_base3 = icdb[3];
+#elif IV_ELEM == 8
+    u32 iv_base3 = icdb[3];
+    u32 iv_base4 = icdb[4];
+    u32 iv_base5 = icdb[5];
+    u32 iv_base6 = icdb[6];
+    u32 iv_base7 = icdb[7];
+#endif
     u32 myindex_iv = (threadIdx.x  / WARPSIZE) * icdb_size ;
 
     u32 i = 0 ;
@@ -112,19 +120,56 @@ __global__ void kernel1(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * cdbms, u32
                 count_shared++;
             }
         }
+        
+        i = 0; 
 #ifdef TRIVIUM_CIPHER
         i = (U32SIZE/2);
-#elif defined GRAIN128_CIPHER
-        i = 0; 
-#else
-        i = 0; 
 #endif
-           for( ; i < U32SIZE  && count_shared < icdb_size; i++){
-               if( (iv_base2 >> i ) & 0x1){
-                   position[count_shared + myindex_iv] = i + U32SIZE + U32SIZE;
-                   count_shared++;
-               }
-           }
+        for( ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base2 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (2 * U32SIZE);
+                count_shared++;
+            }
+        }
+#if IV_ELEM == 4
+        for(i=0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base3 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (3 * U32SIZE );
+                count_shared++;
+            }
+        }
+#elif IV_ELEM == 8
+        for(i=0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base3 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (3 * U32SIZE );
+                count_shared++;
+            }
+        }
+        for(i=0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base4 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (4 * U32SIZE);
+                count_shared++;
+            }
+        }
+        for( i=0; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base5 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (5 * U32SIZE);
+                count_shared++;
+            }
+        }
+        for(i=0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base6 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (6 * U32SIZE);
+                count_shared++;
+            }
+        }
+        for(i=0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base7 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (7 * U32SIZE);
+                count_shared++;
+            }
+        }
+#endif
     }
     __syncthreads();
 
@@ -132,24 +177,39 @@ __global__ void kernel1(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * cdbms, u32
     iv_base0 = cdbms[myindex_iv];
     iv_base1 = cdbms[myindex_iv+1];
     iv_base2 = cdbms[myindex_iv+2];
-
+#if IV_ELEM == 4
+    iv_base3 = cdbms[myindex_iv+3];
+#elif IV_ELEM == 8
+    iv_base3 = cdbms[myindex_iv+3];
+    iv_base4 = cdbms[myindex_iv+4];
+    iv_base5 = cdbms[myindex_iv+5];
+    iv_base6 = cdbms[myindex_iv+6];
+    iv_base7 = cdbms[myindex_iv+7];
+#endif
     myindex_iv = (threadIdx.x  / WARPSIZE) * icdb_size ;
 
     // Now the real cube computation can start
     count_shared =  1 << icdb_size;
     u32 iv_curr0 = 0 , iv_curr1 = 0, iv_curr2 = 0;
+#if IV_ELEM == 4
+    u32 iv_curr3 = 0;
+#elif IV_ELEM ==8
+    u32 iv_curr3 = 0, iv_curr4 = 0, iv_curr5 = 0, iv_curr6 = 0, iv_curr7 =0;
+#endif
     u32 j = 0, local_count = 0;
     u32 tmp = 0;
     j = myindex % WARPSIZE; 
 
-#ifdef TRIVIUM_CIPHER 
+//#ifdef TRIVIUM_CIPHER 
+#if KEY_ELEM == 3
     u32 key0 = key_vett[ j ];
     u32 key3 = key_vett[ j + WARPSIZE ];
     u32 key1 = key_vett[ j + (2 * WARPSIZE) ];
     u32 key4 = key_vett[ j + (3 * WARPSIZE) ];
     u32 key2 = key_vett[ j + (4 * WARPSIZE) ];
     u32 key5 = key_vett[ j + (5 * WARPSIZE) ];
-#elif defined GRAIN128_CIPHER 
+#elif KEY_ELEM == 4
+//#elif defined GRAIN128_CIPHER 
     u32 key0 = key_vett[ j ];
     u32 key4 = key_vett[ j + WARPSIZE ];
     u32 key1 = key_vett[ j + (2 * WARPSIZE) ];
@@ -158,7 +218,24 @@ __global__ void kernel1(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * cdbms, u32
     u32 key6 = key_vett[ j + (5 * WARPSIZE) ];
     u32 key3 = key_vett[ j + (6 * WARPSIZE) ];
     u32 key7 = key_vett[ j + (7 * WARPSIZE) ];
-#else
+#elif KEY_ELEM == 8
+    u32 key0 = key_vett[ j ];
+    u32 key8 = key_vett[ j +  WARPSIZE ];
+    u32 key1 = key_vett[ j + (2 * WARPSIZE) ];
+    u32 key9 = key_vett[ j + (3 * WARPSIZE) ];
+    u32 key2 = key_vett[ j + (4 * WARPSIZE) ];
+    u32 key10= key_vett[ j + (5 * WARPSIZE) ];
+    u32 key3 = key_vett[ j + (6 * WARPSIZE) ];
+    u32 key11= key_vett[ j + (7 * WARPSIZE) ];
+    u32 key4 = key_vett[ j + (8 * WARPSIZE) ];
+    u32 key12= key_vett[ j + (9 * WARPSIZE) ];
+    u32 key5 = key_vett[ j + (10* WARPSIZE) ];
+    u32 key13= key_vett[ j + (11* WARPSIZE) ];
+    u32 key6 = key_vett[ j + (12* WARPSIZE) ];
+    u32 key14= key_vett[ j + (12* WARPSIZE) ];
+    u32 key7 = key_vett[ j + (14* WARPSIZE) ];
+    u32 key15= key_vett[ j + (15* WARPSIZE) ];
+    
     //ERROR: you must specify a supported cipher
 #endif
 
@@ -170,6 +247,15 @@ __global__ void kernel1(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * cdbms, u32
         iv_curr0 = iv_base0; 
         iv_curr1 = iv_base1;
         iv_curr2 = iv_base2;
+#if IV_ELEM == 4
+        iv_curr3 = iv_base3;
+#elif IV_ELEM == 8
+        iv_curr3 = iv_base3;
+        iv_curr4 = iv_base4;
+        iv_curr5 = iv_base5;
+        iv_curr6 = iv_base6;
+        iv_curr7 = iv_base7;
+#endif
 
         // Computing IV value (a cube corner) 
         while(local_count > 0){
@@ -182,11 +268,37 @@ __global__ void kernel1(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * cdbms, u32
                     tmp = 1 << ( position[myindex_iv +j] - U32SIZE);
                     iv_curr1 += tmp;
                 }
-                else{
+                else if (position[myindex_iv+j] < (3*U32SIZE)){
                     tmp = 1 << ( position[myindex_iv +j] - (2*U32SIZE));
                     iv_curr2 += tmp;
                 }
-
+#if IV_ELEM == 4
+                else if (position[myindex_iv+j] < (4*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (3*U32SIZE));
+                    iv_curr3 += tmp;
+                }
+#elif IV_ELEM == 8
+                else if (position[myindex_iv+j] < (4*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (3*U32SIZE));
+                    iv_curr3 += tmp;
+                }
+                else if (position[myindex_iv+j] < (5*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (4*U32SIZE));
+                    iv_curr4 += tmp;
+                }
+                else if (position[myindex_iv+j] < (6*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (5*U32SIZE));
+                    iv_curr5 += tmp;
+                }
+                else if (position[myindex_iv+j] < (7*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (6*U32SIZE));
+                    iv_curr6 += tmp;
+                }
+                else if (position[myindex_iv+j] < (8*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (7*U32SIZE));
+                    iv_curr7 += tmp;
+                }
+#endif
             }
             j++;
             local_count = local_count >> 1;
@@ -464,7 +576,15 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
     u32 iv_base0 = icdb[0];
     u32 iv_base1 = icdb[1];
     u32 iv_base2 = icdb[2];
-
+#if IV_ELEM == 4
+    u32 iv_base3 = icdb[3];
+#elif IV_ELEM ==8
+    u32 iv_base3 = icdb[3];
+    u32 iv_base4 = icdb[4];
+    u32 iv_base5 = icdb[5];
+    u32 iv_base6 = icdb[6];
+    u32 iv_base7 = icdb[7];
+#endif
     u32 myindex_iv = (threadIdx.x  / WARPSIZE) * icdb_size ;
 
     u32 i = 0 ;
@@ -482,19 +602,55 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
                 count_shared++;
             }
         }
+        i=0;
 #ifdef TRIVIUM_CIPHER
         i=(U32SIZE/2);
-#elif defined GRAIN128_CIPHER
-        i = 0;
-#else
-        i=0;
 #endif
         for(  ; i < U32SIZE  && count_shared < icdb_size; i++){
             if( (iv_base2 >> i ) & 0x1){
-                position[count_shared + myindex_iv] = i + U32SIZE + U32SIZE;
+                position[count_shared + myindex_iv] = i + (2 * U32SIZE);
                 count_shared++;
             }
         }
+#if IV_ELEM == 4
+        for( i = 0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base3 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (3 * U32SIZE);
+                count_shared++;
+            }
+        }
+#elif IV_ELEM == 8
+        for( i = 0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base3 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (3 * U32SIZE);
+                count_shared++;
+            }
+        }
+        for( i = 0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base4 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (4 * U32SIZE);
+                count_shared++;
+            }
+        }
+        for( i = 0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base5 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (5 * U32SIZE);
+                count_shared++;
+            }
+        }
+        for( i = 0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base6 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (6 * U32SIZE);
+                count_shared++;
+            }
+        }
+        for( i = 0 ; i < U32SIZE  && count_shared < icdb_size; i++){
+            if( (iv_base7 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = i + (7 * U32SIZE);
+                count_shared++;
+            }
+        }
+#endif
     }
     __syncthreads();
 
@@ -502,19 +658,34 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
     iv_base0 = cdbms[myindex_iv];
     iv_base1 = cdbms[myindex_iv+1];
     iv_base2 = cdbms[myindex_iv+2];
+#if IV_ELEM == 4
+    iv_base3 = cdbms[myindex_iv+3];
+#elif IV_ELEM == 8
+    iv_base3 = cdbms[myindex_iv+3];
+    iv_base4 = cdbms[myindex_iv+4];
+    iv_base5 = cdbms[myindex_iv+5];
+    iv_base6 = cdbms[myindex_iv+6];
+    iv_base7 = cdbms[myindex_iv+7];
+#endif
 
     myindex_iv = (threadIdx.x  / WARPSIZE) * icdb_size ;
 
     // Now the real cube computation can start
     count_shared =  1 << icdb_size;
     u32 iv_curr0 = 0 , iv_curr1 = 0, iv_curr2 = 0;
+#if IV_ELEM == 4
+    u32 iv_curr3 = 0;
+#elif IV_ELEM == 8
+    u32 iv_curr3 = 0, iv_curr4 = 0, iv_curr5 = 0, iv_curr6 = 0, iv_curr7 = 0;
+#endif
     u32 j = 0, local_count = 0;
 
     j = myindex % WARPSIZE; 
 
     u32 tmp = 0;
     u32 sumA = 0 , sumB = 0, sumC = 0;
-#ifdef TRIVIUM_CIPHER 
+#if KEY_ELEM == 3
+//#ifdef TRIVIUM_CIPHER 
     u32 key0 = key_vett[ j ];
     u32 key3 = key_vett[ j + WARPSIZE ];
     u32 key6 = key_vett[ j + (2 * WARPSIZE) ];
@@ -527,7 +698,8 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
     u32 key5 = key_vett[ j + (7 * WARPSIZE) ];
     u32 key8 = key_vett[ j + (8 * WARPSIZE) ];
 
-#elif defined GRAIN128_CIPHER 
+#elif KEY_ELEM == 4
+//#elif defined GRAIN128_CIPHER 
     u32 key0  = key_vett[ j ];
     u32 key4  = key_vett[ j + WARPSIZE ];
     u32 key8  = key_vett[ j + (2 * WARPSIZE) ];
@@ -554,6 +726,88 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
     u32 key19 = key_vett[ j + (19* WARPSIZE) ];
 
     u32  sumD = 0, sumE = 0;
+#elif KEY_ELEM == 8
+    u32 key0  = key_vett[ j  ];
+    u32 key8  = key_vett[ j + WARPSIZE ];
+    u32 key16 = key_vett[ j + (2* WARPSIZE) ];
+    u32 key24 = key_vett[ j + (3* WARPSIZE) ];
+    u32 key32 = key_vett[ j + (4* WARPSIZE) ];
+    u32 key40 = key_vett[ j + (5* WARPSIZE) ];
+    u32 key48 = key_vett[ j + (6* WARPSIZE) ];
+    u32 key56 = key_vett[ j + (7* WARPSIZE) ];
+    u32 key64 = key_vett[ j + (8* WARPSIZE) ];
+
+    u32 key1  = key_vett[ j + (9* WARPSIZE) ];
+    u32 key9  = key_vett[ j + (10*WARPSIZE) ];
+    u32 key17 = key_vett[ j + (11* WARPSIZE) ];
+    u32 key25 = key_vett[ j + (12* WARPSIZE) ];
+    u32 key33 = key_vett[ j + (13* WARPSIZE) ];
+    u32 key41 = key_vett[ j + (14* WARPSIZE) ];
+    u32 key49 = key_vett[ j + (15* WARPSIZE) ];
+    u32 key57 = key_vett[ j + (16* WARPSIZE) ];
+    u32 key65 = key_vett[ j + (17* WARPSIZE) ];
+
+    u32 key2  = key_vett[ j + (18* WARPSIZE) ];
+    u32 key10 = key_vett[ j + (19* WARPSIZE) ];
+    u32 key18 = key_vett[ j + (20* WARPSIZE) ];
+    u32 key26 = key_vett[ j + (21* WARPSIZE) ];
+    u32 key34 = key_vett[ j + (22* WARPSIZE) ];
+    u32 key42 = key_vett[ j + (23* WARPSIZE) ];
+    u32 key50 = key_vett[ j + (24* WARPSIZE) ];
+    u32 key58 = key_vett[ j + (25* WARPSIZE) ];
+    u32 key66 = key_vett[ j + (26* WARPSIZE) ];
+
+    u32 key3  = key_vett[ j + (27* WARPSIZE) ];
+    u32 key11 = key_vett[ j + (28* WARPSIZE) ];
+    u32 key19 = key_vett[ j + (29* WARPSIZE) ];
+    u32 key27 = key_vett[ j + (30* WARPSIZE) ];
+    u32 key35 = key_vett[ j + (31* WARPSIZE) ];
+    u32 key43 = key_vett[ j + (32* WARPSIZE) ];
+    u32 key51 = key_vett[ j + (33* WARPSIZE) ];
+    u32 key59 = key_vett[ j + (34* WARPSIZE) ];
+    u32 key67 = key_vett[ j + (35* WARPSIZE) ];
+
+    u32 key4  = key_vett[ j + (36* WARPSIZE) ];
+    u32 key12 = key_vett[ j + (37* WARPSIZE) ];
+    u32 key20 = key_vett[ j + (38* WARPSIZE) ];
+    u32 key28 = key_vett[ j + (39* WARPSIZE) ];
+    u32 key36 = key_vett[ j + (40* WARPSIZE) ];
+    u32 key44 = key_vett[ j + (41* WARPSIZE) ];
+    u32 key52 = key_vett[ j + (42* WARPSIZE) ];
+    u32 key60 = key_vett[ j + (43* WARPSIZE) ];
+    u32 key68 = key_vett[ j + (44* WARPSIZE) ];
+
+    u32 key5  = key_vett[ j + (45* WARPSIZE) ];
+    u32 key13 = key_vett[ j + (46* WARPSIZE) ];
+    u32 key21 = key_vett[ j + (47* WARPSIZE) ];
+    u32 key29 = key_vett[ j + (48* WARPSIZE) ];
+    u32 key37 = key_vett[ j + (49* WARPSIZE) ];
+    u32 key45 = key_vett[ j + (50* WARPSIZE) ];
+    u32 key53 = key_vett[ j + (51* WARPSIZE) ];
+    u32 key61 = key_vett[ j + (52* WARPSIZE) ];
+    u32 key69 = key_vett[ j + (53* WARPSIZE) ];
+
+    u32 key6  = key_vett[ j + (54* WARPSIZE) ];
+    u32 key14 = key_vett[ j + (55* WARPSIZE) ];
+    u32 key22 = key_vett[ j + (56* WARPSIZE) ];
+    u32 key30 = key_vett[ j + (57* WARPSIZE) ];
+    u32 key38 = key_vett[ j + (58* WARPSIZE) ];
+    u32 key46 = key_vett[ j + (59* WARPSIZE) ];
+    u32 key54 = key_vett[ j + (60* WARPSIZE) ];
+    u32 key62 = key_vett[ j + (61* WARPSIZE) ];
+    u32 key70 = key_vett[ j + (62* WARPSIZE) ];
+
+    u32 key7  = key_vett[ j + (63* WARPSIZE) ];
+    u32 key15 = key_vett[ j + (64* WARPSIZE) ];
+    u32 key23 = key_vett[ j + (65* WARPSIZE) ];
+    u32 key31 = key_vett[ j + (66* WARPSIZE) ];
+    u32 key39 = key_vett[ j + (67* WARPSIZE) ];
+    u32 key47 = key_vett[ j + (68* WARPSIZE) ];
+    u32 key55 = key_vett[ j + (69* WARPSIZE) ];
+    u32 key63 = key_vett[ j + (70* WARPSIZE) ];
+    u32 key71 = key_vett[ j + (71* WARPSIZE) ];
+
+    u32 sumD = 0, sumE = 0, sumF = 0, sumG = 0, sumH = 0, sumI = 0;
 #endif
 
 
@@ -563,7 +817,15 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
         iv_curr0 = iv_base0; 
         iv_curr1 = iv_base1;
         iv_curr2 = iv_base2;
-
+#if IV_ELEM == 4
+        iv_curr3 = iv_base3;
+#elif IV_ELEM == 8
+        iv_curr3 = iv_base3;
+        iv_curr4 = iv_base4;
+        iv_curr5 = iv_base5;
+        iv_curr6 = iv_base6;
+        iv_curr7 = iv_base7;
+#endif
         // Computing IV value (a cube corner) 
         while(local_count > 0){
             if( local_count & 0x1){
@@ -575,11 +837,37 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
                     tmp = 1 << ( position[myindex_iv +j] - U32SIZE);
                     iv_curr1 += tmp;
                 }
-                else{
+                else if(position[myindex_iv+j] < (3*U32SIZE)){
                     tmp = 1 << ( position[myindex_iv +j] - (2*U32SIZE));
                     iv_curr2 += tmp;
                 }
-
+#if IV_ELEM == 4
+                else if(position[myindex_iv+j] < (4*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (3*U32SIZE));
+                    iv_curr3 += tmp;
+                }
+#elif IV_ELEM ==8
+                else if(position[myindex_iv+j] < (4*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (3*U32SIZE));
+                    iv_curr3 += tmp;
+                }
+                else if(position[myindex_iv+j] < (5*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (4*U32SIZE));
+                    iv_curr4 += tmp;
+                }
+                else if(position[myindex_iv+j] < (6*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (5*U32SIZE));
+                    iv_curr5 += tmp;
+                }
+                else if(position[myindex_iv+j] < (7*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (6*U32SIZE));
+                    iv_curr6 += tmp;
+                }
+                else if(position[myindex_iv+j] < (8*U32SIZE)){
+                    tmp = 1 << ( position[myindex_iv +j] - (7*U32SIZE));
+                    iv_curr7 += tmp;
+                }
+#endif
             }
             j++;
             local_count = local_count >> 1;
@@ -619,9 +907,17 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
     k1o[myindex + (myindex_iv*KEYS_SUPERPOLY)] = sumA;
     k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+WARPSIZE] = sumB;
     k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (2 * WARPSIZE)] = sumC;
-#ifdef GRAIN128_CIPHER
+#if KEY_ELEM == 4
+//#ifdef GRAIN128_CIPHER
     k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (3 * WARPSIZE)] = sumD;
     k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (4 * WARPSIZE)] = sumE;
+#elif KEY_ELEM == 8
+    k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (3 * WARPSIZE)] = sumD;
+    k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (4 * WARPSIZE)] = sumE;
+    k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (5 * WARPSIZE)] = sumF;
+    k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (6 * WARPSIZE)] = sumG;
+    k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (7 * WARPSIZE)] = sumH;
+    k1o[myindex+ (myindex_iv*KEYS_SUPERPOLY)+ (8 * WARPSIZE)] = sumI;
 #endif
 }
 
@@ -662,7 +958,15 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
     u32 iv_base0 = cem[myindex_iv];
     u32 iv_base1 = cem[myindex_iv+1];
     u32 iv_base2 = cem[myindex_iv+2];
-
+#if IV_ELEM == 4
+    u32 iv_base3 = cem[myindex_iv+3];
+#elif IV_ELEM == 8
+    u32 iv_base3 = cem[myindex_iv+3];
+    u32 iv_base4 = cem[myindex_iv+4];
+    u32 iv_base5 = cem[myindex_iv+5];
+    u32 iv_base6 = cem[myindex_iv+6];
+    u32 iv_base7 = cem[myindex_iv+7];
+#endif
     u32 i = 0 ;
     u32 base_addr_exaust=0;
 
@@ -676,21 +980,61 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
             base_addr_exaust += bit_table[63-i];
         }
     }
+    i=0;
 #ifdef TRIVIUM_CIPHER
     i=(U32SIZE/2);
-#elif defined GRAIN128_CIPHER
-    i=0;
 #endif
     for( ; i < U32SIZE ; i++){
         if( (iv_base2 >> i ) & 0x1){
             base_addr_exaust += bit_table[95-i];
         }
     }
-
+#if IV_ELEM == 4
+    for( i = 0 ; i < U32SIZE  ; i++){
+        if( (iv_base3 >> i ) & 0x1){
+            base_addr_exaust += bit_table[127-i];
+        }
+    }
+#elif IV_ELEM == 8
+    for( i = 0 ; i < U32SIZE  ; i++){
+        if( (iv_base3 >> i ) & 0x1){
+            base_addr_exaust += bit_table[127-i];
+        }
+    }
+    for( i = 0 ; i < U32SIZE  ; i++){
+        if( (iv_base4 >> i ) & 0x1){
+            base_addr_exaust += bit_table[159-i];
+        }
+    }
+    for( i = 0 ; i < U32SIZE  ; i++){
+        if( (iv_base5 >> i ) & 0x1){
+            base_addr_exaust += bit_table[191-i];
+        }
+    }
+    for( i = 0 ; i < U32SIZE  ; i++){
+        if( (iv_base6 >> i ) & 0x1){
+            base_addr_exaust += bit_table[223-i];
+        }
+    }
+    for( i = 0 ; i < U32SIZE  ; i++){
+        if( (iv_base7 >> i ) & 0x1){
+            base_addr_exaust += bit_table[255-i];
+        }
+    }
+#endif
     // Subtract the fixed part from the mask
     iv_base0 = cfbm[0] ^ ccm[myindex_iv];
     iv_base1 = cfbm[1] ^ ccm[myindex_iv+1];
     iv_base2 = cfbm[2] ^ ccm[myindex_iv+2];
+#if IV_ELEM == 4
+    iv_base2 = cfbm[3] ^ ccm[myindex_iv+3];
+#elif IV_ELEM == 8
+    iv_base2 = cfbm[3] ^ ccm[myindex_iv+3];
+    iv_base2 = cfbm[4] ^ ccm[myindex_iv+4];
+    iv_base2 = cfbm[5] ^ ccm[myindex_iv+5];
+    iv_base2 = cfbm[6] ^ ccm[myindex_iv+6];
+    iv_base2 = cfbm[7] ^ ccm[myindex_iv+7];
+#endif
 
     myindex_iv = (threadIdx.x  / WARPSIZE) * (cube_dim - cfbm_size) ;
     u32 count_shared = 0;
@@ -707,10 +1051,9 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
                 count_shared++;
             }
         }
+        i =0;
 #ifdef TRIVIUM_CIPHER
         i = (U32SIZE/2);
-#elif defined GRAIN128_CIPHER
-        i =0;
 #endif
         for(  ; i < U32SIZE && count_shared < (cube_dim-cfbm_size); i++){
             if( (iv_base2 >> i ) & 0x1)	{
@@ -718,6 +1061,45 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
                 count_shared++;
             }
         }
+#if IV_ELEM == 4
+        for( i = 0 ; i < U32SIZE  && count_shared < (cube_dim-cfbm_size); i++){
+            if( (iv_base3 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = 127 -i ;
+                count_shared++;
+            }
+        }
+#elif IV_ELEM == 8
+        for( i = 0 ; i < U32SIZE  && count_shared < (cube_dim-cfbm_size); i++){
+            if( (iv_base3 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = 127 -i ;
+                count_shared++;
+            }
+        }
+        for( i = 0 ; i < U32SIZE  && count_shared < (cube_dim-cfbm_size); i++){
+            if( (iv_base4 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = 159 -i ;
+                count_shared++;
+            }
+        }
+        for( i = 0 ; i < U32SIZE  && count_shared < (cube_dim-cfbm_size); i++){
+            if( (iv_base5 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = 192 -i ;
+                count_shared++;
+            }
+        }
+        for( i = 0 ; i < U32SIZE  && count_shared < (cube_dim-cfbm_size); i++){
+            if( (iv_base6 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = 223 -i ;
+                count_shared++;
+            }
+        }
+        for( i = 0 ; i < U32SIZE  && count_shared < (cube_dim-cfbm_size); i++){
+            if( (iv_base7 >> i ) & 0x1){
+                position[count_shared + myindex_iv] = 255 -i ;
+                count_shared++;
+            }
+        }
+#endif
     }
     __syncthreads();
 
@@ -732,8 +1114,11 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
 
 
     u32 sumA = 0 , sumB = 0, sumC = 0;
-#ifdef GRAIN128_CIPHER
+//#ifdef GRAIN128_CIPHER
+#if KEY_ELEM == 4
     u32 sumD = 0, sumE = 0;
+#elif KEY_ELEM == 8
+    u32 sumD = 0, sumE = 0, sumF = 0, sumG = 0, sumH = 0, sumI = 0;
 #endif
     u32 tmp = 0;
     // This loop computes the vertices of the cubes and sums them
@@ -760,11 +1145,25 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
         sumB = sumB ^ bcubes_table[index+tmp];
         tmp += WARPSIZE;
         sumC = sumC ^ bcubes_table[index+tmp];
-#ifdef GRAIN128_CIPHER
+//#ifdef GRAIN128_CIPHER
+#if KEY_ELEM == 4
         tmp += WARPSIZE;
         sumD = sumD ^ bcubes_table[index+tmp];
         tmp += WARPSIZE;
         sumE = sumE ^ bcubes_table[index+tmp];
+#elif KEY_ELEM == 8
+        tmp += WARPSIZE;
+        sumD = sumD ^ bcubes_table[index+tmp];
+        tmp += WARPSIZE;
+        sumE = sumE ^ bcubes_table[index+tmp];
+        tmp += WARPSIZE;
+        sumF = sumF ^ bcubes_table[index+tmp];
+        tmp += WARPSIZE;
+        sumG = sumG ^ bcubes_table[index+tmp];
+        tmp += WARPSIZE;
+        sumH = sumH ^ bcubes_table[index+tmp];
+        tmp += WARPSIZE;
+        sumI = sumI ^ bcubes_table[index+tmp];
 #endif  
     }
 
@@ -774,12 +1173,22 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
 
     sumB ^= j;
     tmp = (myindex % WARPSIZE) < RESIDUAL_KEYS;
-#ifdef TRIVIUM_CIPHER
+//#ifdef TRIVIUM_CIPHER
+#if KEY_ELEM == 3
     sumC ^= (j * tmp);// j must be added only to the sums for the coefficients of the first grade terms of the superpoly
-#elif defined GRAIN128_CIPHER
+//#elif defined GRAIN128_CIPHER
+#elif KEY_ELEM == 4
     sumC ^=j;
     sumD ^=j;
     sumE ^= (j * tmp);// j must be added only to the sums for the coefficients of the first grade terms of the superpoly
+#elif KEY_ELEM == 8
+    sumC ^=j;
+    sumD ^=j;
+    sumE ^=j;
+    sumF ^=j;
+    sumG ^=j;
+    sumH ^=j;
+    sumI ^= (j * tmp);// j must be added only to the sums for the coefficients of the first grade terms of the superpoly
 #endif
     tmp = (myindex % WARPSIZE) > 0;
     sumA ^= ( j * tmp); // il thread somma 0
@@ -796,9 +1205,17 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
     k2sout[myindex_iv + myindex] = sumA;
     k2sout[myindex_iv + myindex + WARPSIZE] = sumB;
     k2sout[myindex_iv + myindex + ( 2 * WARPSIZE)] = sumC;
-#ifdef GRAIN128_CIPHER
+//#ifdef GRAIN128_CIPHER
+#if KEY_ELEM == 4
     k2sout[myindex_iv + myindex + ( 3 * WARPSIZE)] = sumD;
     k2sout[myindex_iv + myindex + ( 4 * WARPSIZE)] = sumE;
+#elif KEY_ELEM == 8
+    k2sout[myindex_iv + myindex + ( 3 * WARPSIZE)] = sumD;
+    k2sout[myindex_iv + myindex + ( 4 * WARPSIZE)] = sumE;
+    k2sout[myindex_iv + myindex + ( 5 * WARPSIZE)] = sumF;
+    k2sout[myindex_iv + myindex + ( 6 * WARPSIZE)] = sumG;
+    k2sout[myindex_iv + myindex + ( 7 * WARPSIZE)] = sumH;
+    k2sout[myindex_iv + myindex + ( 8 * WARPSIZE)] = sumI;
 #endif
 
 }
@@ -1094,10 +1511,15 @@ int runAttack(config_ptr conf){
 
     for(i = 0 , index = 0; i < KEYS ; i++)
     {
-#ifdef TRIVIUM_CIPHER
+//#ifdef TRIVIUM_CIPHER
+#if KEY_ELEM == 3
         INFO("%08X %08X %08X\n",key_vett[index], key_vett[index+1],key_vett[index+2]);
-#elif defined GRAIN128_CIPHER
+//#elif defined GRAIN128_CIPHER
+#elif KEY_ELEM == 4
         INFO("%08X %08X %08X %08X\n",key_vett[index], key_vett[index+1],key_vett[index+2],key_vett[index+3] );
+#elif KEY_ELEM == 8
+        INFO("%08X %08X %08X %08X",key_vett[index], key_vett[index+1],key_vett[index+2],key_vett[index+3] );
+        INFO("%08X %08X %08X %08X\n",key_vett[index+4], key_vett[index+5],key_vett[index+6],key_vett[index+7] );
 #endif
         index+=KEY_ELEM;
     }
@@ -1122,14 +1544,28 @@ int runAttack(config_ptr conf){
     INFO("\n%s\n", LINE_BREAK_STRING );
 
     for(i = 0 , index = 0 ; i < num_of_cubes ; i++) {
+#if IV_ELEM == 3
         INFO("%08X %08X %08X\n",host_cdbms[index], host_cdbms[index+1],host_cdbms[index+2] );
+#elif IV_ELEM == 4
+        INFO("%08X %08X %08X %08X\n",host_cdbms[index], host_cdbms[index+1],host_cdbms[index+2], host_cdbms[index+3] );
+#elif IV_ELEM ==8
+        INFO("%08X %08X %08X %08X",host_cdbms[index], host_cdbms[index+1],host_cdbms[index+2], host_cdbms[index+3] );
+        INFO("%08X %08X %08X %08X\n",host_cdbms[index+4], host_cdbms[index+5],host_cdbms[index+6], host_cdbms[index+7] );
+#endif
         index+=IV_ELEM;
     }
 
     INFO("\n%s\n", LINE_BREAK_STRING );
     INFO("CUBE %s: ", CIPHER_NAME);
     INFO("\n%s\n", LINE_BREAK_STRING );
+#if IV_ELEM == 3
     INFO("%08X %08X %08X\n",host_icdb[0], host_icdb[1],host_icdb[2] );
+#elif IV_ELEM == 4
+    INFO("%08X %08X %08X %08X\n",host_icdb[0], host_icdb[1],host_icdb[2], host_icdb[3] );
+#elif IV_ELEM == 8
+    INFO("%08X %08X %08X %08X",host_icdb[0], host_icdb[1],host_icdb[2],host_icdb[3]);
+    INFO("%08X %08X %08X %08X\n",host_icdb[4], host_icdb[5],host_icdb[6],host_icdb[7]);
+#endif
     fflush(log_file);
 
     //It will operate inplace (i.e. key_vett will be modified)

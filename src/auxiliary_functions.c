@@ -1,8 +1,8 @@
 /* <This program implements the Kite-Attack Framework, a GPU-tailored implementation of the Cube Attack.>
  * Copyright (C) <2015-2020> <Massimo Bernaschi> <massimo[DOT]bernaschi[AT]gmail[DOT]com>
- * Copyright (C) <2015-2020>  <Marco Cianfriglia> <marco[DOT]cianfriglia[AT]gmail[DOT]com>    
+ * Copyright (C) <2015-2020> <Marco Cianfriglia> <marco[DOT]cianfriglia[AT]gmail[DOT]com>    
  * Copyright (C) <2015-2020> <Stefano Guarino> <ste[DOT]guarino[AT]gmail[DOT]com>
- * Copyright (C) <2015-2020><Flavio Lombardi> <flavio[DOT]lombardi[AT]cnr[DOT]it>
+ * Copyright (C) <2015-2020> <Flavio Lombardi> <flavio[DOT]lombardi[AT]cnr[DOT]it>
  * Copyright (C) <2015-2020> <Marco Pedicini> <m[DOT]pedicini[AT]gmail[DOT]com>
  *
  * This file is part of Kite-Attack Framework.
@@ -600,7 +600,7 @@ u32* generateCubeCorners(u32 * beta_indices, u32 beta){
 	    while( local_var > 0 && j < beta){
 		    if( local_var & 0x1){
 #ifdef TRIVIUM_CIPHER
-        	        setBitTrivium(base, beta_indices[j],1);
+                setBitTrivium(base, beta_indices[j],1);
 #elif defined GRAIN128_CIPHER
 		        setBitGrain128(base, beta_indices[j],1);
 #else
