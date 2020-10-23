@@ -37,8 +37,8 @@
 
 TRIVIUM_IV_SIZE=80
 GRAIN128_IV_SIZE=96
-DEFAULT_ROUNDS_GRAIN128=128
-DEFAULT_ROUNDS_TRIVIUM=576
+DEFAULT_ROUNDS_GRAIN128=256 #up to 256
+DEFAULT_ROUNDS_TRIVIUM=1152 #up to 1152
 
 
 NEW_CONFIG="Generate a new configuration File"
@@ -188,10 +188,12 @@ echo "::::::::::::::::......::::..:::::..:::.......::::.......:::..:::::::::::::
 
 
 
+TRIVIUM_INFO="[INFO] TRIVIUM: IV_SIZE: 80 (IV_0 .... IV_79) - KEY_SIZE: 80 (K_0 .... K_79) - Number of initialization rounds: 1152"
+GRAIN128_INFO="[INFO] GRAIN128: IV_SIZE: 96 (IV_0 .... IV_95) - KEY_SIZE: 128 (K_0 .... K_127) - Number of initialization rounds: 256"
 
 
 echo "This script will help you to create the configuration file for the Kite Attack."
-#echo "The script will also check if CUDA is installed on the system."
+echo "To test your installation, please use the configuration files in config directory"
 echo "Please follow the instructions and answer the question."
 
 run_id=$(mktemp -u  KITE_XXXXXXXXXX)
@@ -226,12 +228,15 @@ do
             case ${target_cipher} in
                 ${TRIVIUM_STRING})
                     default_rounds=${DEFAULT_ROUNDS_TRIVIUM}
+                    echo "${TRIVIUM_INFO}"
                     ;;
                 ${GRAIN128_STRING})
                     default_rounds=${DEFAULT_ROUNDS_GRAIN128}
+                    echo "${GRAIN128_INFO}"
                     ;;
             esac
-
+            
+            echo "Choose the number of initialization rounds for the selected cipher. Please note that usually to calibrate the attack its better to start with a number of round less than the default (for example $(( ${default_rounds}/2)) )"
             read -p "Insert the number of initialization rounds for the selected cipher: (default ${default_rounds})" num_rounds
             : ${num_rounds:=${default_rounds}}
             test_number ${num_rounds}
@@ -242,12 +247,12 @@ do
             echo "${RUN_IDENTIFIIER_STRING}=${RUN_IDENTIFIER}" >> "${OUTPUT_FILE}"
 
 
-            read -p "Insert the value of Alpha (number)": alpha
+            read -p "Insert the size of Alpha set ": alpha
             test_number ${alpha} 
             test_alpha ${alpha} ${target_cipher}
             echo "${ALPHA_STRING}=${alpha}" >> "${OUTPUT_FILE}"
 
-            read -p "Insert the value of Beta (number)": beta
+            read -p "Insert the size of Beta set (number)": beta
             test_number ${beta} 
             test_alpha_beta ${alpha} ${beta} 
             echo "${BETA_STRING}=${beta}" >> "${OUTPUT_FILE}"

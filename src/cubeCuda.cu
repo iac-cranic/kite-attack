@@ -1114,7 +1114,6 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
 
 
     u32 sumA = 0 , sumB = 0, sumC = 0;
-//#ifdef GRAIN128_CIPHER
 #if KEY_ELEM == 4
     u32 sumD = 0, sumE = 0;
 #elif KEY_ELEM == 8
@@ -1145,7 +1144,6 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
         sumB = sumB ^ bcubes_table[index+tmp];
         tmp += WARPSIZE;
         sumC = sumC ^ bcubes_table[index+tmp];
-//#ifdef GRAIN128_CIPHER
 #if KEY_ELEM == 4
         tmp += WARPSIZE;
         sumD = sumD ^ bcubes_table[index+tmp];
@@ -1173,10 +1171,8 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
 
     sumB ^= j;
     tmp = (myindex % WARPSIZE) < RESIDUAL_KEYS;
-//#ifdef TRIVIUM_CIPHER
 #if KEY_ELEM == 3
     sumC ^= (j * tmp);// j must be added only to the sums for the coefficients of the first grade terms of the superpoly
-//#elif defined GRAIN128_CIPHER
 #elif KEY_ELEM == 4
     sumC ^=j;
     sumD ^=j;
@@ -1205,7 +1201,6 @@ __global__ void kernel2_superpoly(u32 * bcubes_table, u32 bcubes_table_len, u32 
     k2sout[myindex_iv + myindex] = sumA;
     k2sout[myindex_iv + myindex + WARPSIZE] = sumB;
     k2sout[myindex_iv + myindex + ( 2 * WARPSIZE)] = sumC;
-//#ifdef GRAIN128_CIPHER
 #if KEY_ELEM == 4
     k2sout[myindex_iv + myindex + ( 3 * WARPSIZE)] = sumD;
     k2sout[myindex_iv + myindex + ( 4 * WARPSIZE)] = sumE;
@@ -1511,10 +1506,8 @@ int runAttack(config_ptr conf){
 
     for(i = 0 , index = 0; i < KEYS ; i++)
     {
-//#ifdef TRIVIUM_CIPHER
 #if KEY_ELEM == 3
         INFO("%08X %08X %08X\n",key_vett[index], key_vett[index+1],key_vett[index+2]);
-//#elif defined GRAIN128_CIPHER
 #elif KEY_ELEM == 4
         INFO("%08X %08X %08X %08X\n",key_vett[index], key_vett[index+1],key_vett[index+2],key_vett[index+3] );
 #elif KEY_ELEM == 8
