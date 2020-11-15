@@ -309,11 +309,11 @@ __global__ void kernel1(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * cdbms, u32
         u32 a = 0;
         u32 b = 0;
 #ifdef TRIVIUM_CIPHER
-        a =  k_trivium(key0, key1, key2, iv_curr0, iv_curr1, iv_curr2, num_round);
-        b =  k_trivium(key3, key4, key5, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_trivium(key0, key1, key2, iv_curr0, iv_curr1, iv_curr2, num_round/32);
+        b =  k_trivium(key3, key4, key5, iv_curr0, iv_curr1, iv_curr2, num_round/32);
 #elif defined GRAIN128_CIPHER
-        a =  k_grain128(key0, key1, key2, key3, iv_curr0, iv_curr1, iv_curr2, num_round);
-        b =  k_grain128(key4, key5, key6, key7, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_grain128(key0, key1, key2, key3, iv_curr0, iv_curr1, iv_curr2, num_round/32);
+        b =  k_grain128(key4, key5, key6, key7, iv_curr0, iv_curr1, iv_curr2, num_round/32);
 #endif
         sumA = sumA ^ a;
         sumB = sumB ^ b;
@@ -877,23 +877,23 @@ __global__ void kernel1_superpoly(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * 
         // GRAIN18 : (K1 = (key0 || key1 || key2 || key3), K2 = (key4 || key5 || key6 || key7) )
         u32 a = 0;
 #ifdef TRIVIUM_CIPHER
-        a =  k_trivium(key0, key1, key2, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_trivium(key0, key1, key2, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         sumA = sumA ^ a;
-        a =  k_trivium(key3, key4, key5, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_trivium(key3, key4, key5, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         sumB = sumB ^ a;
-        a =  k_trivium(key6, key7, key8, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_trivium(key6, key7, key8, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         sumC = sumC ^ a;
 
 #elif defined GRAIN128_CIPHER
-        a =  k_grain128(key0, key1, key2, key3, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_grain128(key0, key1, key2, key3, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         sumA = sumA ^ a;
-        a =  k_grain128(key4, key5, key6, key7, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_grain128(key4, key5, key6, key7, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         sumB = sumB ^ a;
-        a =  k_grain128(key8, key9, key10, key11, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_grain128(key8, key9, key10, key11, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         sumC = sumC ^ a;
-        a =  k_grain128(key12, key13, key14, key15, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_grain128(key12, key13, key14, key15, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         sumD = sumD ^ a;
-        a =  k_grain128(key16, key17, key18, key19, iv_curr0, iv_curr1, iv_curr2, num_round);
+        a =  k_grain128(key16, key17, key18, key19, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         sumE = sumE ^ a;
 #else
         //ERROR: you must specify a supported cipher
@@ -1581,7 +1581,7 @@ int runAttack(config_ptr conf){
         nblocks = MIN( MAXNUMBLOCKS,  ( (tmp_num_iv / (nthreads / WARPSIZE) ) +1)  );
         shared_size = conf->beta * ( ( nthreads + WARPSIZE -1) / WARPSIZE) * sizeof(u32);
         k1o_dim = num_of_cubes * WARPSIZE;
-        kernel1<<<nblocks,nthreads, shared_size>>>(device_k1_output,k1o_dim, device_key, device_cdbms, device_icdb, conf->beta, conf->loop_cipher_round ,offset);
+        kernel1<<<nblocks,nthreads, shared_size>>>(device_k1_output,k1o_dim, device_key, device_cdbms, device_icdb, conf->beta, conf->num_round ,offset);
         cudaKernelCheck((char*)"[ERROR][kernel1]:");
         cudaDeviceSynchronize();
         if(tmp_num_iv > max_iv_per_launch){
@@ -1822,7 +1822,7 @@ int computeSuperpoly(config_ptr conf, int passed_test){
 
         shared_size = conf->beta * ( ( nthreads + WARPSIZE - 1)  / WARPSIZE) * sizeof(u32);
         k1o_dim = num_of_cubes * WARPSIZE;
-        kernel1_superpoly<<<nblocks,nthreads, shared_size>>>(device_k1_output, k1o_dim, device_key, device_cdbms, device_icdb,conf->beta, conf->loop_cipher_round ,offset);
+        kernel1_superpoly<<<nblocks,nthreads, shared_size>>>(device_k1_output, k1o_dim, device_key, device_cdbms, device_icdb,conf->beta, conf->num_round ,offset);
         cudaKernelCheck((char*)"kernel1_superpoly");
         if(tmp_num_iv > max_iv_per_launch)
             tmp_num_iv = tmp_num_iv - max_iv_per_launch;
