@@ -25,8 +25,10 @@
 #ifndef __HEADER_AUXILIARY_FUNCTIONS__
 #define __HEADER_AUXILIARY_FUNCTIONS__
 
+#include <stdlib.h>
 #include <errno.h>
 #include "def.h"
+
 
 #define DEFAULT_CONFIGURATION_NUMBER 10
 struct cubes

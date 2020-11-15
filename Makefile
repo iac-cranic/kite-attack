@@ -19,13 +19,14 @@ CUDA_FLAGS += -O3
 #CUDA_FLAGS += -g 
 #CUDA_FLAGS += -G
 CUDA_FLAGS += -arch=sm_35 
+MICKEY_IV_LEN=80
 #CUDA_FLAGS += -arch=sm_60
 
 ####### TARGET ########
 
 HEADERS=$(SRCDIR)/key_table.h $(SRCDIR)/twiddle.h $(SRCDIR)/cranic.h
 
-all:kite_attack_trivium kite_attack_grain128
+all:kite_attack_trivium kite_attack_grain128 kite_attack_mickey2
 install:
 	mkdir -p ${OUTPUT_DIR}
 	mkdir -p ${BIN}
@@ -36,6 +37,7 @@ install:
 TWIDDLE=$(SRCDIR)/twiddle.c
 AUXILIARY_TRIVIUM=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Trivium_auxiliary.c $(SRCDIR)/Grain128_auxiliary.c $(SRCDIR)/cranic.c
 AUXILIARY_GRAIN128=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Grain128_auxiliary.c $(SRCDIR)/Trivium_auxiliary.c $(SRCDIR)/cranic.c
+AUXILIARY_MICKEY2=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Mickey2_auxiliary.c $(SRCDIR)/cranic.c
 
 
 kite_attack_trivium: ${SRCDIR}/cubeCuda.cu $(TWIDDLE) $(AUXILIARY_TRIVIUM) $(HEADERS)
@@ -43,6 +45,9 @@ kite_attack_trivium: ${SRCDIR}/cubeCuda.cu $(TWIDDLE) $(AUXILIARY_TRIVIUM) $(HEA
 
 kite_attack_grain128: ${SRCDIR}/cubeCuda.cu $(TWIDDLE) $(AUXILIARY_GRAIN128) $(HEADERS)
 	$(NVCC)  ${SRCDIR}/cubeCuda.cu -o $(BIN)/kite_attack_grain128 $(TWIDDLE) $(AUXILIARY_GRAIN128) $(CUDA_FLAGS) -DGRAIN128_CIPHER 
+
+kite_attack_mickey2: ${SRCDIR}/cubeCuda.cu $(TWIDDLE) $(AUXILIARY_MICKEY2) $(HEADERS)
+	$(NVCC)  ${SRCDIR}/cubeCuda.cu -o $(BIN)/kite_attack_mickey2 $(TWIDDLE) $(AUXILIARY_MICKEY2) $(CUDA_FLAGS) -DMICKEY2_CIPHER -DMICKEY_IV_LEN=${MICKEY_IV_LEN} 
 
 ####### CLEAN ############
 .PHONY: clean

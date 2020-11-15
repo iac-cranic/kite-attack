@@ -37,21 +37,24 @@
 
 TRIVIUM_IV_SIZE=80
 GRAIN128_IV_SIZE=96
+MICKEY2_IV_SIZE=80
 DEFAULT_ROUNDS_GRAIN128=256 #up to 256
 DEFAULT_ROUNDS_TRIVIUM=1152 #up to 1152
+DEFAULT_ROUNDS_MICKEY2=100 #up to 100
 
 
 NEW_CONFIG="Generate a new configuration File"
 QUIT="Quit"
 TRIVIUM_STRING="Trivium"
 GRAIN128_STRING="Grain-128"
+MICKEY2_STRING="Mickey2"
 ALPHA_STRING="ALPHA"
 BETA_STRING="BETA"
 ALPHA_SET_STRING="ALPHA_SET"
 BETA_SET_STRING="BETA_SET"
 NUM_ROUNDS_STRING="INIT_ROUNDS"
 RUN_IDENTIFIIER_STRING="RUN_IDENTIFIER"
-SUPPORTED_CIPHER="${TRIVIUM_STRING} ${GRAIN128_STRING}" 
+SUPPORTED_CIPHER="${TRIVIUM_STRING} ${GRAIN128_STRING} ${MICKEY2_STRING}" 
 DEFAULT_TARGET=0
 TARGET_CIPHER=""
 ALPHA=0
@@ -91,6 +94,9 @@ test_alpha(){
         ${GRAIN128_STRING})
             max=${GRAIN128_IV_SIZE}
             ;;
+	${MICKEY2_STRING})
+	    max=${MICKEY2_IV_SIZE}
+	    ;;
     esac
     if [ ${a} -ge ${max} ]
     then
@@ -137,6 +143,9 @@ test_indexes(){
         ${GRAIN128_STRING})
             max=${GRAIN128_IV_SIZE}
             ;;
+	${MICKEY2_STRING})
+	    max=${MICKEY2_IV_SIZE}
+	    ;;
     esac
 
 
@@ -190,6 +199,7 @@ echo "::::::::::::::::......::::..:::::..:::.......::::.......:::..:::::::::::::
 
 TRIVIUM_INFO="[INFO] TRIVIUM: IV_SIZE: 80 (IV_0 .... IV_79) - KEY_SIZE: 80 (K_0 .... K_79) - Number of initialization rounds: 1152"
 GRAIN128_INFO="[INFO] GRAIN128: IV_SIZE: 96 (IV_0 .... IV_95) - KEY_SIZE: 128 (K_0 .... K_127) - Number of initialization rounds: 256"
+MICKEY2_INFO="[INFO] MICKEY2: IV_SIZE: up to 80 (IV_0 .... IV_79) - KEY_SIZE: 80 (K_0 .... K_79) - Number of initialization rounds: 100"
 
 
 echo "This script will help you to create the configuration file for the Kite Attack."
@@ -234,6 +244,9 @@ do
                     default_rounds=${DEFAULT_ROUNDS_GRAIN128}
                     echo "${GRAIN128_INFO}"
                     ;;
+                ${MICKEY2_STRING})
+                    default_rounds=${DEFAULT_ROUNDS_MICKEY2}
+                    echo "${MICKEY2_INFO}"
             esac
             
             echo "Choose the number of initialization rounds for the selected cipher. Please note that usually to calibrate the attack its better to start with a number of round less than the default (for example $(( ${default_rounds}/2)) )"

@@ -396,7 +396,8 @@ u32* genPaperKeys(){
     u32 old[10*KEY_ELEM];
     int i = 0;
     for(i = 0; i < 10 * KEY_ELEM; i++){
-        old[i] = rand48();
+        old[i] = rand();
+        //old[i] = rand48();
     }
 #endif
     u32 *key_vett=(u32*)Calloc(10*KEY_ELEM, sizeof(u32),"Calloc key");
@@ -602,7 +603,9 @@ u32* generateCubeCorners(u32 * beta_indices, u32 beta){
 #ifdef TRIVIUM_CIPHER
                 setBitTrivium(base, beta_indices[j],1);
 #elif defined GRAIN128_CIPHER
-		        setBitGrain128(base, beta_indices[j],1);
+                setBitGrain128(base, beta_indices[j],1);
+#elif defined MICKEY2_CIPHER
+                setBitMickey2(base, beta_indices[j],1);
 #else
 		        return NULL;
 #endif

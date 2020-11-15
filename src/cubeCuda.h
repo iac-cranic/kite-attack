@@ -54,7 +54,9 @@ extern "C"{
 extern "C"{
     #include "Grain128_auxiliary.h"
 }
-
+extern "C"{
+    #include "Mickey2_auxiliary.h"
+}
 extern "C"{
     #include "cranic.h"
 }
