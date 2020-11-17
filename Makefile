@@ -18,9 +18,20 @@ CUDA_FLAGS += --maxrregcount=64
 CUDA_FLAGS += -O3
 #CUDA_FLAGS += -g 
 #CUDA_FLAGS += -G
-CUDA_FLAGS += -arch=sm_35 
-MICKEY_IV_LEN=80
+#CUDA_FLAGS += -arch=sm_35 
+MICKEY_IV_LEN=40
 #CUDA_FLAGS += -arch=sm_60
+CUDA_FLAGS += -gencode arch=compute_35,code=sm_35
+CUDA_FLAGS += -gencode arch=compute_37,code=sm_37
+CUDA_FLAGS += -gencode arch=compute_50,code=sm_50
+CUDA_FLAGS += -gencode arch=compute_52,code=sm_52
+CUDA_FLAGS += -gencode arch=compute_53,code=sm_53
+CUDA_FLAGS += -gencode arch=compute_60,code=sm_60
+CUDA_FLAGS += -gencode arch=compute_61,code=sm_61
+CUDA_FLAGS += -gencode arch=compute_62,code=sm_62
+CUDA_FLAGS += -gencode arch=compute_70,code=sm_70
+CUDA_FLAGS += -gencode arch=compute_72,code=sm_72
+
 
 ####### TARGET ########
 

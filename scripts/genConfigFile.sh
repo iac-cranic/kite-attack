@@ -48,10 +48,14 @@ QUIT="Quit"
 TRIVIUM_STRING="Trivium"
 GRAIN128_STRING="Grain-128"
 MICKEY2_STRING="Mickey2"
-ALPHA_STRING="ALPHA"
-BETA_STRING="BETA"
-ALPHA_SET_STRING="ALPHA_SET"
-BETA_SET_STRING="BETA_SET"
+ALPHA_STRING="I_max"
+BETA_STRING="I_min"
+ALPHA_SET_STRING="I_max"
+BETA_SET_STRING="I_min"
+#ALPHA_STRING="ALPHA"
+#BETA_STRING="BETA"
+#ALPHA_SET_STRING="ALPHA_SET"
+#BETA_SET_STRING="BETA_SET"
 NUM_ROUNDS_STRING="INIT_ROUNDS"
 RUN_IDENTIFIIER_STRING="RUN_IDENTIFIER"
 SUPPORTED_CIPHER="${TRIVIUM_STRING} ${GRAIN128_STRING} ${MICKEY2_STRING}" 
@@ -118,11 +122,11 @@ test_alpha_beta(){
     local a=$1
     local b=$2
 
-#    if [ ${b} -ge ${a} ]
-#    then
-#        echo "[ERROR]: The value of Beta (${b}) cannot be greaten or equal to the value of Alpha (${a})"
-#        exit 1
-#    fi
+    if [ ${b} -ge ${a} ]
+    then
+        echo "[ERROR]: The value of I_max  (${a}) must be greaten than I_min  (${b})"
+        exit 1
+    fi
     if [ ${b} -le 0 ]
     then
         echo "[ERROR]: Invalid value provided for Beta (${b}). It cannot be less or equal to 0"
@@ -250,62 +254,71 @@ do
             esac
             
             echo "Choose the number of initialization rounds for the selected cipher. Please note that usually to calibrate the attack its better to start with a number of round less than the default (for example $(( ${default_rounds}/2)) )"
-            read -p "Insert the number of initialization rounds for the selected cipher: (default ${default_rounds})" num_rounds
+            read -p "Insert the number of initialization rounds for the selected cipher: (default ${default_rounds}): " num_rounds
             : ${num_rounds:=${default_rounds}}
             test_number ${num_rounds}
             echo "${NUM_ROUNDS_STRING}=${num_rounds}" >> "${OUTPUT_FILE}"
 
-            read -p "Insert run Identifier: (automatically generated: ${run_id})" RUN_IDENTIFIER
+            read -p "Insert run Identifier: (automatically generated: ${run_id}): " RUN_IDENTIFIER
             : ${RUN_IDENTIFIER:=${run_id}}
             echo "${RUN_IDENTIFIIER_STRING}=${RUN_IDENTIFIER}" >> "${OUTPUT_FILE}"
 
 
-            read -p "Insert the size of Alpha set ": alpha
+            read -p "Insert the value of I_max ": alpha
+            #read -p "Insert the value of Alpha ": alpha
             test_number ${alpha} 
             test_alpha ${alpha} ${target_cipher}
             echo "${ALPHA_STRING}=${alpha}" >> "${OUTPUT_FILE}"
 
-            read -p "Insert the size of Beta set (number)": beta
+            read -p "Insert the value of I_min": beta
+            #read -p "Insert the value of Beta": beta
             test_number ${beta} 
             test_alpha_beta ${alpha} ${beta} 
             echo "${BETA_STRING}=${beta}" >> "${OUTPUT_FILE}"
 
             declare -a union_set
-            declare -a alpha_set
-
-            for (( i = 0 ; i < ${alpha}; i++ )) 
-            do
-                read -p "Insert the ${i}-th value to the Alpha set (please note that the indexes start from 0): " alpha_set[${i}]
-                test_number ${alpha_set[${i}]} ${target_cipher} 
-                union_set[${i}]=${alpha_set[${i}]}
-            done
-
-            echo "[INFO]: ${ALPHA_SET_STRING}={${alpha_set[*]}}"
 
             declare -a beta_set
 
-            for (( i = 0, j = ${alpha}; i < ${beta}; i++, j++ )) 
+            for (( i = 0 ; i < ${beta}; i++ )) 
             do
-                read -p "Insert the ${i}-th value to the Beta set (please note that the indexes start from 0): " beta_set[${i}]
+                read -p "Insert the ${i}-th value that belongs to I_min (please note that the indexes start from 0): " beta_set[${i}]
                 test_number ${beta_set[${i}]} ${target_cipher} 
-                union_set[${j}]=${beta_set[${i}]}
+                union_set[${i}]=${beta_set[${i}]}
             done
 
-            echo "[INFO]: ${BETA_SET_STRING}={${beta_set[*]}}"
+            echo "[INFO]: I_min={${beta_set[*]}}"
+            #echo "[INFO]: ${BETA_SET_STRING}={${beta_set[*]}}"
             
+            declare -a alpha_set
+
+	    alpha_minus_beta=$(( $alpha - $beta ))
+	    for (( i = 0, j = ${beta}; i < ${alpha_minus_beta}; i++, j++ )) 
+            do
+                read -p "Insert the ${i}-th value that belongs to I_max but not to I_min (i.e. (I_max\\ I_min) (please note that the indexes start from 0): " alpha_set[${i}]
+                test_number ${alpha_set[${i}]} ${target_cipher} 
+                union_set[${j}]=${alpha_set[${i}]}
+            done
+
+            echo "[INFO]: (I_max\\I_min)={${alpha_set[*]}}"
+            #echo "[INFO]: ${ALPHA_SET_STRING}={${alpha_set[*]}}"
            
             # Check alpha and beta sets
             # - Duplicates are not allowed
             # - Intersections are not allowed
             count=$( echo "${union_set[*]}" | tr -s " " "\n" | sort -n | uniq | wc -l)
 
-            if [ ${count} -ne $(( $alpha + $beta )) ]
+            if [ ${count} -ne $(( $alpha )) ]
+            #if [ ${count} -ne $(( $alpha + $beta )) ]
             then
                 echo "[ERROR]: Invalid sets provided" 
                 echo "[INFO]: The sets cannot contain duplicate values"
-                echo "[INFO]: The intersection between Alpha and Beta sets must be empty"
-                echo "${ALPHA_SET_STRING}: ${alpha_set[*]}"
-                echo "${BETA_SET_STRING}: ${Beta_set[*]}"
+                echo "[INFO]: The intersection between I_min and (I_max \\ I_min) must be empty"
+                #echo "[INFO]: The intersection between Alpha and Beta sets must be empty"
+                echo "I_max\\I_min: ${alpha_set[*]}"
+                echo "I_min: ${Beta_set[*]}"
+                #echo "${ALPHA_SET_STRING}: ${alpha_set[*]}"
+                #echo "${BETA_SET_STRING}: ${Beta_set[*]}"
                 exit 1
             fi
 
