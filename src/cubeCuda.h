@@ -77,10 +77,12 @@ extern "C"{
 
 
 #define NUM_ROUND_STRING "INIT_ROUNDS"
-#define ALPHA_STRING "ALPHA"
-#define ALPHA_SET_STRING "ALPHA_SET"
-#define BETA_STRING "BETA"
-#define BETA_SET_STRING "BETA_SET"
+#define ALPHA_STRING "I_max"
+#define ALPHA_SET_STRING "I_MAX_SET"
+#define ALPHA_MINUS_BETA_STRING "I_max_minus_I_min"
+#define ALPHA_MINUS_BETA_SET_STRING "I_MAX_minus_I_MIN_SET"
+#define BETA_STRING "I_min"
+#define BETA_SET_STRING "I_MIN_SET"
 #define CONSTANT_STRING "CONSTANT"
 #define CONSTANT_SET_STRING "CONSTANT_SET"
 #define RESULT_FILENAME_STRING "RESULT_FILENAME"
@@ -131,6 +133,8 @@ struct configuration{
     int keystream_offset;
     int alpha;
     u32 *alpha_indices;
+    int alpha_minus_beta;
+    u32 *alpha_minus_beta_indices;
     int beta;
     u32 *beta_indices;
     int constant;

@@ -46,12 +46,14 @@ DEFAULT_ROUNDS_MICKEY2=100 #up to 100
 NEW_CONFIG="Generate a new configuration File"
 QUIT="Quit"
 TRIVIUM_STRING="Trivium"
-GRAIN128_STRING="Grain-128"
+GRAIN128_STRING="Grain128"
 MICKEY2_STRING="Mickey2"
 ALPHA_STRING="I_max"
+ALPHA_MINUS_BETA_STRING="I_max_minus_I_min"
 BETA_STRING="I_min"
-ALPHA_SET_STRING="I_max"
-BETA_SET_STRING="I_min"
+ALPHA_SET_STRING="I_MAX_SET"
+BETA_SET_STRING="I_MIN_SET"
+ALPHA_MINUS_BETA_SET_STRING="I_MAX_minus_I_MIN_SET"
 #ALPHA_STRING="ALPHA"
 #BETA_STRING="BETA"
 #ALPHA_SET_STRING="ALPHA_SET"
@@ -212,25 +214,12 @@ echo "Please follow the instructions and answer the question."
 
 run_id=$(mktemp -u  KITE_XXXXXXXXXX)
 
-select choice in "${NEW_CONFIG}" "${QUIT}"; 
-do
-    case ${choice} in 
-
-        ${QUIT} )
-            echo "Exiting"
-            exit 1
-            break
-            ;;
-
-
-        ${NEW_CONFIG} )
-            echo $choice $REPLY
             default_output="newKiteAttack.conf"
             read -p "Where do you want to save the configuration? (default ${default_output}): " OUTPUT_FILE 
             : ${OUTPUT_FILE:=${default_output}}
             echo "${OUTPUT_FILE}"
 
-
+	    echo "Select the target cipher: "
             select target_cipher in ${SUPPORTED_CIPHER};
             do
                 echo "Selected ${target_cipher}"
@@ -268,12 +257,14 @@ do
             #read -p "Insert the value of Alpha ": alpha
             test_number ${alpha} 
             test_alpha ${alpha} ${target_cipher}
-            echo "${ALPHA_STRING}=${alpha}" >> "${OUTPUT_FILE}"
 
             read -p "Insert the value of I_min": beta
             #read -p "Insert the value of Beta": beta
             test_number ${beta} 
             test_alpha_beta ${alpha} ${beta} 
+	    alpha_minus_beta=$(( $alpha - $beta ))
+            echo "${ALPHA_STRING}=${alpha}" >> "${OUTPUT_FILE}"
+            echo "${ALPHA_MINUS_BETA_STRING}=${alpha_minus_beta}" >> "${OUTPUT_FILE}"
             echo "${BETA_STRING}=${beta}" >> "${OUTPUT_FILE}"
 
             declare -a union_set
@@ -295,7 +286,7 @@ do
 	    alpha_minus_beta=$(( $alpha - $beta ))
 	    for (( i = 0, j = ${beta}; i < ${alpha_minus_beta}; i++, j++ )) 
             do
-                read -p "Insert the ${i}-th value that belongs to I_max but not to I_min (i.e. (I_max\\ I_min) (please note that the indexes start from 0): " alpha_set[${i}]
+                read -p "Insert the ${i}-th value that belongs to I_max but not to I_min (i.e. (I_max\\ I_min)) (please note that the indexes start from 0): " alpha_set[${i}]
                 test_number ${alpha_set[${i}]} ${target_cipher} 
                 union_set[${j}]=${alpha_set[${i}]}
             done
@@ -323,6 +314,10 @@ do
             fi
 
             printf "%s={" ${ALPHA_SET_STRING} >> ${OUTPUT_FILE}
+            a=$( echo "${union_set[*]}" | xargs -n1 | sort -n | xargs | tr -s " " "," )
+            printf "$a}\n" >> ${OUTPUT_FILE}
+
+            printf "%s={" ${ALPHA_MINUS_BETA_SET_STRING} >> ${OUTPUT_FILE}
             a=$( echo "${alpha_set[*]}" | xargs -n1 | sort -n | xargs | tr -s " " "," )
             printf "$a}\n" >> ${OUTPUT_FILE}
 
@@ -330,10 +325,7 @@ do
             a=$( echo "${beta_set[*]}" | xargs -n1 | sort -n | xargs | tr -s " " "," )
             printf "$a}\n" >> ${OUTPUT_FILE}
 
-        esac
 
-        break
-    done
     echo "The configuration file ${OUTPUT_FILE} has been successfully generated"
     echo "================================="
     cat ${OUTPUT_FILE}

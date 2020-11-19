@@ -583,6 +583,14 @@ unsigned long long getMaxNumMask(u32 alpha){
 }
 
 
+u32 * setBitunsupported(u32* base, u8 bit, u8 state){
+	
+	fprintf(stderr,"[ERROR]: unsupported cipher\n");
+	exit(EXIT_FAILURE);
+	return base;
+}
+//#define SET_BITR(cipher,base,beta,v) setBit## cipher(base,beta,v)
+//#define SET_BIT(cipher,base,beta,v) SET_BITR(cipher,base,beta,v)
 u32* generateCubeCorners(u32 * beta_indices, u32 beta){
     u32 *base;
     u32 index;
@@ -600,15 +608,7 @@ u32* generateCubeCorners(u32 * beta_indices, u32 beta){
 	    local_var  = i;
 	    while( local_var > 0 && j < beta){
 		    if( local_var & 0x1){
-#ifdef TRIVIUM_CIPHER
-                setBitTrivium(base, beta_indices[j],1);
-#elif defined GRAIN128_CIPHER
-                setBitGrain128(base, beta_indices[j],1);
-#elif defined MICKEY2_CIPHER
-                setBitMickey2(base, beta_indices[j],1);
-#else
-		        return NULL;
-#endif
+		SET_BIT(CIPHER,base,beta_indices[j],i);
 		    }
 		    j++;
 		    local_var = local_var >> 1;

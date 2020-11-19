@@ -223,12 +223,19 @@ void arrangeKeysForGPU(u32* keys, u32 num_of_keys, u32 key_size);
 /*
  * Function: getMaxNumMask
  *
- * It computew the maximum number of mask given alpha
+ * It computes the maximum number of mask given alpha
  *
  * - alpha: the size of ALPHA-SET
  */
 unsigned long long getMaxNumMask(u32 alpha);
 
+/*
+ * Function: setBitunsupported
+ *
+ * It is the call back function in the case a non valid cipher is provided
+ *
+ */
+u32 * setBitunsupported(u32* base, u8 bit, u8 state){
 /*
  * Function: generateCubeCorners
  *

@@ -11,13 +11,13 @@ CONFIG=config
 OUTPUT_DIR=output
 CCLFLAGS = $(LIB) 
 CCFLAGS =  $(INCLUDE) 
-CCFLAGS += -O3 -fast
+#CCFLAGS += -O3 -fast
 MAXTHREADSPERBLOCK=1024
 CUDA_FLAGS =-Xptxas="-v"  -DMAXNUMTHREAD=${MAXTHREADSPERBLOCK}
 CUDA_FLAGS += --maxrregcount=64 
-CUDA_FLAGS += -O3
-#CUDA_FLAGS += -g 
-#CUDA_FLAGS += -G
+#CUDA_FLAGS += -O3
+CUDA_FLAGS += -g 
+CUDA_FLAGS += -G
 #CUDA_FLAGS += -arch=sm_35 
 MICKEY_IV_LEN=40
 #CUDA_FLAGS += -arch=sm_60
@@ -46,9 +46,9 @@ install:
 
 
 TWIDDLE=$(SRCDIR)/twiddle.c
-AUXILIARY_TRIVIUM=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Trivium_auxiliary.c $(SRCDIR)/Grain128_auxiliary.c $(SRCDIR)/cranic.c
-AUXILIARY_GRAIN128=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Grain128_auxiliary.c $(SRCDIR)/Trivium_auxiliary.c $(SRCDIR)/cranic.c
-AUXILIARY_MICKEY2=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Mickey2_auxiliary.c $(SRCDIR)/cranic.c
+AUXILIARY_TRIVIUM=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Trivium_auxiliary.c $(SRCDIR)/unsupported_auxiliary.c $(SRCDIR)/cranic.c
+AUXILIARY_GRAIN128=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Grain128_auxiliary.c $(SRCDIR)/unsupported_auxiliary.c $(SRCDIR)/cranic.c
+AUXILIARY_MICKEY2=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Mickey2_auxiliary.c $(SRCDIR)/unsupported_auxiliary.c $(SRCDIR)/cranic.c
 
 
 kite_attack_trivium: ${SRCDIR}/cubeCuda.cu $(TWIDDLE) $(AUXILIARY_TRIVIUM) $(HEADERS)

@@ -50,9 +50,11 @@
 #define MAX_PATHNAME 2048
 #define EMPTY_STRING ""
 #define TRIVIUM_STRING "Trivium"
-#define GRAIN128_STRING "Grain-128"
+#define TRIVIUM Trivium
+#define GRAIN128_STRING "Grain128"
+#define GRAIN128 Grain128
 #define MICKEY2_STRING "Mickey2"
-
+#define MICKEY2 Mickey2
 
 
 #ifdef TRIVIUM_CIPHER
@@ -64,6 +66,7 @@
     #define RESIDUAL_KEYS 17 // Number of keys in the last block of 32 (80keys + 0..0key = 2 * 32 + 17) (KEYS_COEFFICIENT % U32SIZE)
     #define TOTAL_KEYS 96
     #define CIPHER_NAME TRIVIUM_STRING
+    #define CIPHER TRIVIUM
     #define KEY_SIZE TRIVIUM_KEY_SIZE
     #define IV_SIZE TRIVIUM_IV_SIZE
 #elif defined GRAIN128_CIPHER
@@ -75,6 +78,7 @@
     #define RESIDUAL_KEYS 1 // Number of keys in the last block of 32 (128 keys + 0..0key = 4 * 32 + 1) (KEYS_COEFFICIENT % U32SIZE)
     #define TOTAL_KEYS 160
     #define CIPHER_NAME GRAIN128_STRING
+    #define CIPHER GRAIN128
     #define KEY_SIZE GRAIN128_KEY_SIZE
     #define IV_SIZE GRAIN128_IV_SIZE
 #elif defined MICKEY2_CIPHER
@@ -86,6 +90,7 @@
     #define RESIDUAL_KEYS 1 // Number of keys in the last block of 32 (128 keys + 0..0key = 4 * 32 + 1) (KEYS_COEFFICIENT % U32SIZE)
     #define TOTAL_KEYS 96
     #define CIPHER_NAME MICKEY2_STRING
+    #define CIPHER MICKEY2
     #define KEY_SIZE MICKEY2_KEY_SIZE
     #define IV_SIZE MICKEY2_IV_SIZE
 #else
@@ -96,7 +101,11 @@
     #define RESIDUAL_KEYS 0
     #define TOTAL_KEYS 0
     #define CIPHER_NAME "UNSUPPORTED"
+    #define CIPHER unsupported
 #endif
+
+#define SET_BITR(cipher,base,beta,v) setBit## cipher(base,beta,v)
+#define SET_BIT(cipher,base,beta,v) SET_BITR(cipher,base,beta,v)
 
 #define KEYS 64
 #define KEYS_SUPERPOLY TOTAL_KEYS 

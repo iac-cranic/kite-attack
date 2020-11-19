@@ -38,6 +38,7 @@
 #define MIN_CUDA_CAPABILITY 3
 #define NTHREADS 1024
 
+#define LOG_NAME "kite_attack.log"
 #define INFO(...) fprintf(log_file,__VA_ARGS__)
 
 #define ERROR(...) fprintf(log_file,__VA_ARGS__); \
@@ -45,7 +46,7 @@
 exit(EXIT_FAILURE);
 
 
-#define ARGC 5
+#define ARGC 4
 int DEBUG=0;
 FILE *log_file = NULL;
 char *output_dir = NULL;
@@ -1290,6 +1291,7 @@ void freeConfig(config_ptr conf){
         return;
     }
     Free(conf->alpha_indices);
+    Free(conf->alpha_minus_beta_indices);
     Free(conf->beta_indices);
     Free(conf->constant_indices);
     Free(conf->run_identifier);
@@ -1317,7 +1319,8 @@ config_ptr parseConfigFile(char * pathname){
 
     ret = configurationFileParser(pathname, &key_vector, &value_vector);
     if( ret <= 0 ){
-        ERROR("Invalid config_file\n");
+        fprintf(stderr,"Invalid config_file\n");
+	exit(EXIT_FAILURE);
     }
 
     for ( i = 0 ; i < ret ; i++){
@@ -1328,6 +1331,8 @@ config_ptr parseConfigFile(char * pathname){
             conf->loop_cipher_round = conf->num_round / U32SIZE; 
         }else if( 0 == strcmp (key_vector[i],ALPHA_STRING)){
             conf->alpha = atoi(value_vector[i]);
+        }else if( 0 == strcmp (key_vector[i],ALPHA_MINUS_BETA_STRING)){
+            conf->alpha_minus_beta = atoi(value_vector[i]);
         }else if( 0 == strcmp (key_vector[i],BETA_STRING)){
             conf->beta = atoi(value_vector[i]);
         }else if( 0 == strcmp (key_vector[i],CONSTANT_STRING)){
@@ -1336,6 +1341,8 @@ config_ptr parseConfigFile(char * pathname){
             conf->constant_indices = getVettFromStringSet(value_vector[i],conf->constant);
         }else if(0 == strcmp(key_vector[i],ALPHA_SET_STRING)){
             conf->alpha_indices  = getVettFromStringSet(value_vector[i],conf->alpha);
+        }else if(0 == strcmp(key_vector[i],ALPHA_MINUS_BETA_SET_STRING)){
+            conf->alpha_minus_beta_indices  = getVettFromStringSet(value_vector[i],conf->alpha_minus_beta);
         }else if(0 == strcmp(key_vector[i],BETA_SET_STRING)){
             conf->beta_indices = getVettFromStringSet(value_vector[i],conf->beta);
         }else if(0 == strcmp(key_vector[i],RUN_ID_STRING)){
@@ -1345,7 +1352,7 @@ config_ptr parseConfigFile(char * pathname){
         }else if(0 == strcmp(key_vector[i],DEBUG_STRING)){
             DEBUG=1;
         }else{
-            INFO("WARN : Unrecognized key in config_file : %s\n", key_vector[i] );
+            fprintf(stderr,"WARN : Unrecognized key in config_file : %s\n", key_vector[i] );
         }
     }
     for(i = 0 ; i < ret ; i++){
@@ -1355,14 +1362,15 @@ config_ptr parseConfigFile(char * pathname){
     free(key_vector);
     free(value_vector);
 
-    if( NULL == conf->beta_indices || NULL == conf->alpha_indices){
-        ERROR("invalid config_file\n");
+    if( NULL == conf->beta_indices || NULL == conf->alpha_indices || NULL == conf->alpha_minus_beta_indices){
+        fprintf(stderr,"Invalid config_file\n");
+	exit(EXIT_FAILURE);
     }
 
     conf->execution_mode = NORMAL_MODE;
     return conf;
 }
-#define USAGE "[INFO] Usage: <device_id> <log_file> <conf_file> <output_dir>" 
+#define USAGE "[INFO] Usage: <device_id> <configuration_file> <output_dir>" 
 int main(int argc, char ** argv){
 
     CranicBanner();
@@ -1374,12 +1382,16 @@ int main(int argc, char ** argv){
 
     int device = 0;
     device = atoi(argv[1]);
-    log_file = Fopen(argv[2],"w+", "[main]: Fopen log_file");
-    FILE *cnf_file = Fopen(argv[3],"r", "[main]: Fopen cnf_file");
-    output_dir = strdup(argv[4]);
+    FILE *cnf_file = Fopen(argv[2],"r", "[main]: Fopen cnf_file");
+    output_dir = strdup(argv[3]);
     Mkdir(output_dir, DIRPERM);
 
-    config_ptr conf = parseConfigFile(argv[3]);
+    config_ptr conf = parseConfigFile(argv[2]);
+    if (chdir(output_dir) < 0){
+	fprintf(stderr,"[FATAL]: can not change directory to %s\n",output_dir);
+	return EXIT_FAILURE;	
+    }
+    log_file = Fopen(LOG_NAME,"w+", "[main]: Fopen log_file");
     conf->device = device;
     int num_passed_test = 0;
     num_passed_test = runAttack(conf);
@@ -1399,7 +1411,8 @@ void deviceSetup(int device){
     size_t free_mem, total_mem;
 
     // Get (and check) CUDA device properties 
-    cudaErrorCheck(cudaGetDevice(&device),(const char*)"cudaGetDevice");
+    //cudaErrorCheck(cudaGetDevice(&device),(const char*)"cudaGetDevice");
+    cudaErrorCheck(cudaSetDevice(device),"cudaSetDevice");
 
     cudaDeviceReset();
     cudaErrorCheck(cudaGetDeviceProperties(&device_properties, device), "cudaGetDeviceProperties");
@@ -1415,7 +1428,6 @@ void deviceSetup(int device){
     INFO("CUDA Device: %s\ttotal memory available: %zu\n", device_properties.name, total_mem );
     INFO("CUDA Device: %s\tfree memory available: %zu\n", device_properties.name, free_mem );
 
-    cudaErrorCheck(cudaSetDevice(device),"cudaSetDevice");
     cudaDeviceSynchronize();
 }
 
@@ -1469,8 +1481,8 @@ int runAttack(config_ptr conf){
     key_vett = genAttackKeys(seed, paper_keys);
 
 
-    num_of_cubes = 1 << conf->alpha;
-    host_cdbms = generateAlphaMask(conf->alpha_indices, conf->alpha, num_of_cubes);
+    num_of_cubes = 1 << conf->alpha_minus_beta;
+    host_cdbms = generateAlphaMask(conf->alpha_minus_beta_indices, conf->alpha_minus_beta, num_of_cubes);
     if(NULL == host_cdbms){	
         ERROR("ERROR: unable to calculate host_cdbms");
     }
@@ -1484,9 +1496,9 @@ int runAttack(config_ptr conf){
 
     fflush(log_file);
 
-    k1_out_dim = (1 << conf->alpha) * NUM_KEY * sizeof(u32);
-    max_num_linear_tests = getMaxNumMask(conf->alpha);	// i > (m-2)/3
-    max_num_cubes = coeffBin(conf->alpha,conf->alpha/2);
+    k1_out_dim = (1 << conf->alpha_minus_beta) * NUM_KEY * sizeof(u32);
+    max_num_linear_tests = getMaxNumMask(conf->alpha_minus_beta);	// i > (m-2)/3
+    max_num_cubes = coeffBin(conf->alpha_minus_beta,conf->alpha_minus_beta/2);
 
     // Allocate memory arrays on GPU device
     cudaErrorCheck(
@@ -1633,11 +1645,11 @@ int runAttack(config_ptr conf){
 
     fout=createFile(output_dir, conf->run_identifier, "wb");
 
-    for( i = conf->cube_min_size; i <= conf->alpha; i++)
+    for( i = conf->cube_min_size; i <= conf->alpha_minus_beta; i++)
     {
-        num_mask = coeffBin(conf->alpha,i);
+        num_mask = coeffBin(conf->alpha_minus_beta,i);
         tmp_num_mask = num_mask;
-        mask_vett = generateIvMask(i,conf->alpha,num_mask);
+        mask_vett = generateIvMask(i,conf->alpha_minus_beta,num_mask);
         if(NULL == mask_vett){
             fprintf(stderr, "[ERROR]: unable to allocate memory for mask_vett\n");
             return EXIT_FAILURE;
@@ -1657,7 +1669,7 @@ int runAttack(config_ptr conf){
         for(j = 0, offset = 0; j < launch_loop; j++, offset+=max_mask_per_launch){
             nblocks = MIN( MAXNUMBLOCKS,  ( ( ( tmp_num_mask) / (nthreads / WARPSIZE) ) +1)  );
 
-            kernel2 <<< nblocks,nthreads>>>(device_k1_output,num_of_cubes,device_imask, num_mask, i, device_key_table1, device_key_table2, device_k2_output,offset,conf->alpha);
+            kernel2 <<< nblocks,nthreads>>>(device_k1_output,num_of_cubes,device_imask, num_mask, i, device_key_table1, device_key_table2, device_k2_output,offset,conf->alpha_minus_beta);
 
             cudaKernelCheck((char*)"[ERROR][kernel2]:");
             cudaDeviceSynchronize();
@@ -1669,7 +1681,7 @@ int runAttack(config_ptr conf){
             TIMER_STOP;
             INFO("time Kernel_2: %f\n",TIMER_ELAPSED );
 
-            curr_num_mask = (1 << (conf->alpha - i) ) * coeffBin(conf->alpha, i); // 2^(M-i) * coeffBin(M,i)
+            curr_num_mask = (1 << (conf->alpha_minus_beta - i) ) * coeffBin(conf->alpha_minus_beta, i); // 2^(M-i) * coeffBin(M,i)
             INFO("curr_num_mask : %llu\n",curr_num_mask );
 
             cudaErrorCheck(cudaMemcpy(host_k2out,device_k2_output, curr_num_mask*sizeof(u32), cudaMemcpyDeviceToHost),(char*)"cudaMemcpy device_k2_output");
@@ -1680,7 +1692,7 @@ int runAttack(config_ptr conf){
 
             INFO("\n%s\n", LINE_BREAK_STRING );
 
-            num_test_passed = dumpBinaryOutput(host_k2out,curr_num_mask, i, conf->alpha,conf->beta, mask_vett,host_cdbms,host_icdb,fout, conf->num_round);
+            num_test_passed = dumpBinaryOutput(host_k2out,curr_num_mask, i, conf->alpha_minus_beta,conf->beta, mask_vett,host_cdbms,host_icdb,fout, conf->num_round);
             num_tot_test_passed += num_test_passed;
 
             INFO("Num_test_passed per dimension %u(%u+%u) : %u \n",conf->beta + i, conf->beta,i,num_test_passed );
@@ -1752,7 +1764,7 @@ int computeSuperpoly(config_ptr conf, int passed_test){
     fout = NULL;
 
     nthreads = NTHREADS;
-    num_of_cubes = 1 << conf->alpha;
+    num_of_cubes = 1 << conf->alpha_minus_beta;
 
     size_key_vett = KEYS_SUPERPOLY * KEY_ELEM * sizeof(u32);
     size_k1_output = KEYS_SUPERPOLY * num_of_cubes * sizeof(u32);
@@ -1787,7 +1799,7 @@ int computeSuperpoly(config_ptr conf, int passed_test){
     free(tmp_k);
 
 
-    host_cdbms = generateAlphaMask(conf->alpha_indices, conf->alpha, num_of_cubes);
+    host_cdbms = generateAlphaMask(conf->alpha_minus_beta_indices, conf->alpha_minus_beta, num_of_cubes);
     if(NULL == host_cdbms){	
         ERROR("ERROR: unable to calculate host_cdbms");
     }
@@ -1867,14 +1879,14 @@ int computeSuperpoly(config_ptr conf, int passed_test){
     cudaErrorCheck(cudaFree(device_cdbms),(char*)"cudaFree device_cdbms");
 
     host_bit_table = (u32*)Calloc(KEY_SIZE,sizeof(u32),"Calloc host_bit_table");
-    for (j = 0; j < conf->alpha; j++){
-        host_bit_table[conf->alpha_indices[j]] = ( 1 << j);
+    for (j = 0; j < conf->alpha_minus_beta; j++){
+        host_bit_table[conf->alpha_minus_beta_indices[j]] = ( 1 << j);
     }
     cudaErrorCheck(cudaMalloc( (u32**)&device_bit_table, KEY_SIZE*sizeof(u32)),(char*)"cudaMalloc device_bit_table");
     cudaErrorCheck(cudaMemcpy(device_bit_table, host_bit_table, KEY_SIZE*sizeof(u32), cudaMemcpyHostToDevice),(char*)"cudaMemcpy device_bit_table");
     free(host_bit_table);
 
-    cube_sizes = conf->alpha - conf->cube_min_size;
+    cube_sizes = conf->alpha_minus_beta - conf->cube_min_size;
     path =(char*) Malloc(sizeof(char) * MAX_PATHNAME, "Malloc path");
     snprintf(path,MAX_PATHNAME,"%s/%s",output_dir, conf->run_identifier);
     cubes = readBinaryOutput(path, passed_test,cube_sizes, conf->num_round ); 

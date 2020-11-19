@@ -29,7 +29,6 @@ u32 * setBitTrivium(u32* base, u8 bit, u8 state){
 		return base;
 
 	int index = (79 - bit) / (U32SIZE);
-	
 	u32 tmp = bitTableMap[bit] ;
 
 	base[index] |= tmp;	
