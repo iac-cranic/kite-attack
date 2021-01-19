@@ -235,7 +235,7 @@ unsigned long long getMaxNumMask(u32 alpha);
  * It is the call back function in the case a non valid cipher is provided
  *
  */
-u32 * setBitunsupported(u32* base, u8 bit, u8 state){
+u32 * setBitunsupported(u32* base, u8 bit, u8 state);
 /*
  * Function: generateCubeCorners
  *

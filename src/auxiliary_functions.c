@@ -587,7 +587,6 @@ u32 * setBitunsupported(u32* base, u8 bit, u8 state){
 	
 	fprintf(stderr,"[ERROR]: unsupported cipher\n");
 	exit(EXIT_FAILURE);
-	return base;
 }
 //#define SET_BITR(cipher,base,beta,v) setBit## cipher(base,beta,v)
 //#define SET_BIT(cipher,base,beta,v) SET_BITR(cipher,base,beta,v)

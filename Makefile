@@ -46,9 +46,9 @@ install:
 
 
 TWIDDLE=$(SRCDIR)/twiddle.c
-AUXILIARY_TRIVIUM=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Trivium_auxiliary.c $(SRCDIR)/unsupported_auxiliary.c $(SRCDIR)/cranic.c
-AUXILIARY_GRAIN128=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Grain128_auxiliary.c $(SRCDIR)/unsupported_auxiliary.c $(SRCDIR)/cranic.c
-AUXILIARY_MICKEY2=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Mickey2_auxiliary.c $(SRCDIR)/unsupported_auxiliary.c $(SRCDIR)/cranic.c
+AUXILIARY_TRIVIUM=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Trivium_auxiliary.c $(SRCDIR)/cranic.c
+AUXILIARY_GRAIN128=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Grain128_auxiliary.c $(SRCDIR)/cranic.c
+AUXILIARY_MICKEY2=$(SRCDIR)/auxiliary_functions.c $(SRCDIR)/Mickey2_auxiliary.c $(SRCDIR)/cranic.c
 
 
 kite_attack_trivium: ${SRCDIR}/cubeCuda.cu $(TWIDDLE) $(AUXILIARY_TRIVIUM) $(HEADERS)

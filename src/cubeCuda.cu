@@ -317,12 +317,9 @@ __global__ void kernel1(u32 * k1o, u32 k1o_dim, u32 * key_vett, u32 * cdbms, u32
 #elif defined GRAIN128_CIPHER
         a =  k_grain128(key0, key1, key2, key3, iv_curr0, iv_curr1, iv_curr2, num_round/32);
         b =  k_grain128(key4, key5, key6, key7, iv_curr0, iv_curr1, iv_curr2, num_round/32);
-<<<<<<< HEAD
 #elif defined MICKEY2_CIPHER
         a = k_mickey2(key0, key1, key2, iv_curr0, iv_curr1, iv_curr2, num_round,MICKEY_IV_LEN);
         b = k_mickey2(key3, key4, key5, iv_curr0, iv_curr1, iv_curr2, num_round,MICKEY_IV_LEN);
-=======
->>>>>>> 5b5db086ee923b393a6c9481692344ada5707f90
 #endif
         sumA = sumA ^ a;
         sumB = sumB ^ b;

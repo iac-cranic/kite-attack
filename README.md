@@ -3,6 +3,7 @@
 **This repository contains the framework to launch Kite Attack against the following ciphers**:
  - Trivium
  - Grain128
+ - Mickey2.0
 
 ## Table of contents
 - [Installation]
