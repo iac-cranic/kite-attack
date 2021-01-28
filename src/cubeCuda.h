@@ -1,9 +1,9 @@
 /* <This program implements the Kite-Attack Framework, a GPU-tailored implementation of the Cube Attack.>
- * Copyright (C) <2015-2020> <Massimo Bernaschi> <massimo[DOT]bernaschi[AT]gmail[DOT]com>
- * Copyright (C) <2015-2020> <Marco Cianfriglia> <marco[DOT]cianfriglia[AT]gmail[DOT]com>    
- * Copyright (C) <2015-2020> <Stefano Guarino> <ste[DOT]guarino[AT]gmail[DOT]com>
- * Copyright (C) <2015-2020> <Flavio Lombardi> <flavio[DOT]lombardi[AT]cnr[DOT]it>
- * Copyright (C) <2015-2020> <Marco Pedicini> <m[DOT]pedicini[AT]gmail[DOT]com>
+ * Copyright (C) <2015-2021> <Massimo Bernaschi> <massimo[DOT]bernaschi[AT]gmail[DOT]com>
+ * Copyright (C) <2015-2021> <Marco Cianfriglia> <marco[DOT]cianfriglia[AT]gmail[DOT]com>    
+ * Copyright (C) <2015-2021> <Stefano Guarino> <ste[DOT]guarino[AT]gmail[DOT]com>
+ * Copyright (C) <2015-2021> <Flavio Lombardi> <flavio[DOT]lombardi[AT]cnr[DOT]it>
+ * Copyright (C) <2015-2021> <Marco Pedicini> <m[DOT]pedicini[AT]gmail[DOT]com>
  *
  * This file is part of Kite-Attack Framework.
  *
@@ -100,11 +100,11 @@ This software is the Kite-Attack framework.\n\
 This software is released under the GPLv3 license.\n\
 Refer to docs/LICENSE for more information.\n\
 This project has been developed in collaboration with National Research Council of Italy (CNR) and Roma Tre University.\n\
-Copyright(C) 2015-2020: Massimo Bernaschi (massimo <DOT> bernaschi <AT> gmail <DOT> com)\n\
-Copyright(C) 2015-2020: Marco Cianfriglia (marco <DOT> cianfriglia <AT> gmail <DOT> com)\n\
-Copyright(C) 2015-2020: Stefano Guarino (stefano <DOT> guarino <AT> gmail <DOT> com)\n\
-Copyright(C) 2015-2020: Flavio Lombardi (flavio <DOT> lombardi <AT> gmail <DOT> com)\n\
-Copyright(C) 2015-2020: Marco Pedicini (marco <DOT> pedicini <AT> gmail <DOT> com)\n\
+Copyright(C) 2015-2021: Massimo Bernaschi (massimo <DOT> bernaschi <AT> gmail <DOT> com)\n\
+Copyright(C) 2015-2021: Marco Cianfriglia (marco <DOT> cianfriglia <AT> gmail <DOT> com)\n\
+Copyright(C) 2015-2021: Stefano Guarino (stefano <DOT> guarino <AT> gmail <DOT> com)\n\
+Copyright(C) 2015-2021: Flavio Lombardi (flavio <DOT> lombardi <AT> gmail <DOT> com)\n\
+Copyright(C) 2015-2021: Marco Pedicini (marco <DOT> pedicini <AT> gmail <DOT> com)\n\
 This framework is used and maintained for a research project and likely will have many bugs and issues.\n\n\
 For any question, please refer to [Marco Cianfriglia](mailto:marco<DOT>cianfriglia<AT>gmail<DOT>com)\n";
 
