@@ -25,6 +25,7 @@
 #include "auxiliary_functions.h"
 #include "Trivium_auxiliary.h"
 #include "Grain128_auxiliary.h"
+#include "Mickey2_auxiliary.h"
 #include "twiddle.h"
 
 
