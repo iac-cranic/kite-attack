@@ -1267,15 +1267,7 @@ u32 * generateAlphaMask(u32* indices_array, u32 indices_array_len,  u32 num_cube
         local_var  = i ; 
         while( local_var > 0 && j < indices_array_len){
             if( local_var & 0x1){
-#ifdef TRIVIUM_CIPHER
-                setBitTrivium(&(iv_vett[index]), indices_array[j], 1);
-#elif defined GRAIN128_CIPHER
-                setBitGrain128(&(iv_vett[index]), indices_array[j], 1);
-#elif defined MICKEY2_CIPHER
-		setBitMickey2(&(iv_vett[index]), indices_array[j], 1);
-#else
-                ERROR("Unsupported cipher");
-#endif
+                SET_BIT(CIPHER,&(iv_vett[index]), indices_array[j],i);
             }
             j++;
             local_var = local_var >> 1;
